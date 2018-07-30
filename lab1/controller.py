@@ -37,7 +37,13 @@ class Lab1controller(app_manager.RyuApp):
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-        
+
+        match = parser.OFPMatch()
+	actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
+                                          ofproto.OFPCML_NO_BUFFER)]
+       	
+	self.add_flow(datapath, 0, match, actions)
+	""" 
 	match1 = parser.OFPMatch(in_port=1)
 	action1 = [parser.OFPActionOutput(2)]
 	self.add_flow(datapath, 0, match1, action1)
@@ -45,4 +51,42 @@ class Lab1controller(app_manager.RyuApp):
 	match2 = parser.OFPMatch(in_port=2)
 	action2 = [parser.OFPActionOutput(1)]
 	self.add_flow(datapath, 0, match2, action2)
-				
+	"""
+
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def _packet_in_handler(self, ev):
+	msg = ev.msg
+        datapath = msg.datapath
+        parser = datapath.ofproto_parser
+
+	in_port = msg.match['in_port']
+	self.send_port_stats_request(datapath)
+	
+
+    def send_port_stats_request(self, datapath):
+        print("send request")
+        ofp = datapath.ofproto
+        ofp_parser = datapath.ofproto_parser
+
+        req = ofp_parser.OFPPortStatsRequest(datapath, 0, ofp.OFPP_ANY)
+        datapath.send_msg(req)
+
+    @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
+    def port_stats_reply_handler(self, ev):
+        print("reply request")
+        ports = []
+	msg = ev.msg
+        datapath = msg.datapath
+	parser = datapath.ofproto_parser
+
+        for stat in ev.msg.body:
+            ports.append(stat.port_no)
+      
+        match = parser.OFPMatch(in_port=ports[1])
+        action = [parser.OFPActionOutput(ports[2])]
+	self.add_flow(datapath, 1, match, action)
+
+        match = parser.OFPMatch(in_port=ports[2])
+        action = [parser.OFPActionOutput(ports[1])]
+	self.add_flow(datapath, 1, match, action)
+
