@@ -50,7 +50,6 @@ class Lab1controller(app_manager.RyuApp):
         datapath = msg.datapath
         parser = datapath.ofproto_parser
 
-	in_port = msg.match['in_port']
 	self.send_port_stats_request(datapath)
 	
 
