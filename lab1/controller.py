@@ -43,16 +43,7 @@ class Lab1controller(app_manager.RyuApp):
                                           ofproto.OFPCML_NO_BUFFER)]
        	
 	self.add_flow(datapath, 0, match, actions)
-	""" 
-	match1 = parser.OFPMatch(in_port=1)
-	action1 = [parser.OFPActionOutput(2)]
-	self.add_flow(datapath, 0, match1, action1)
-	
-	match2 = parser.OFPMatch(in_port=2)
-	action2 = [parser.OFPActionOutput(1)]
-	self.add_flow(datapath, 0, match2, action2)
-	"""
-
+    
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
 	msg = ev.msg
